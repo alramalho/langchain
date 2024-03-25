@@ -61,7 +61,7 @@ from langchain_core.runnables import (
     ensure_config,
 )
 from langchain_core.runnables.config import run_in_executor
-
+import json
 
 class SchemaAnnotationError(TypeError):
     """Raised when 'args_schema' is missing or has an incorrect type annotation."""
@@ -285,8 +285,8 @@ class ChildTool(BaseTool):
         input_args = self.args_schema
         if isinstance(tool_input, str):
             if input_args is not None:
-                key_ = next(iter(input_args.__fields__.keys()))
-                input_args.validate({key_: tool_input})
+                tool_input = json.loads(tool_input)
+                input_args.validate(tool_input)
             return tool_input
         else:
             if input_args is not None:
