@@ -283,19 +283,17 @@ class ChildTool(BaseTool):
     ) -> Union[str, Dict[str, Any]]:
         """Convert tool input to pydantic model."""
         input_args = self.args_schema
-        if isinstance(tool_input, str):
-            if input_args is not None:
+        if input_args is not None:
+            if isinstance(tool_input, str):
                 tool_input = json.loads(tool_input)
-                input_args.validate(tool_input)
-            return tool_input
-        else:
-            if input_args is not None:
-                result = input_args.parse_obj(tool_input)
-                return {
-                    k: getattr(result, k)
-                    for k, v in result.dict().items()
-                    if k in tool_input
-                }
+
+            result = input_args.parse_obj(tool_input)
+            return {
+                k: getattr(result, k)
+                for k, v in result.dict().items()
+                if k in tool_input
+            }
+        
         return tool_input
 
     @root_validator()
