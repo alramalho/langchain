@@ -20,12 +20,14 @@ tool for the job.
 from __future__ import annotations
 
 import inspect
+import json
 import uuid
 import warnings
 from abc import ABC, abstractmethod
 from functools import partial
 from inspect import signature
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import (Any, Awaitable, Callable, Dict, List, Optional, Tuple,
+                    Type, Union)
 
 from langchain_core.callbacks import (
     AsyncCallbackManager,
@@ -61,7 +63,7 @@ from langchain_core.runnables import (
     ensure_config,
 )
 from langchain_core.runnables.config import run_in_executor
-import json
+
 
 class SchemaAnnotationError(TypeError):
     """Raised when 'args_schema' is missing or has an incorrect type annotation."""
@@ -285,6 +287,7 @@ class ChildTool(BaseTool):
         input_args = self.args_schema
         if input_args is not None:
             if isinstance(tool_input, str):
+                tool_input = tool_input.replace("\n", "\\n")
                 tool_input = json.loads(tool_input)
 
             result = input_args.parse_obj(tool_input)
