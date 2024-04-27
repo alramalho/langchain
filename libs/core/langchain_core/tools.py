@@ -279,6 +279,27 @@ class ChildTool(BaseTool):
 
     # --- Tool ---
 
+    def _escape_newlines_in_json(self, json_str: str):
+        import re
+        # Regex pattern to match string values and properly escape internal newlines
+        pattern = r'(?<!\\)"((?:[^"\\]|\\.)*)"'
+        
+        # Function to replace newlines within string values
+        def replace_newlines(match):
+            # Escape newlines within the matched string by adding a backslash before them
+            value = match.group(0)
+            escaped_value = re.sub(r'(?<!\\)\n', '\\\\n', value)
+            return escaped_value
+        
+        # Apply the replacement function to all string values in the JSON
+        escaped_json = re.sub(pattern, replace_newlines, json_str)
+        return escaped_json
+
+    def _prepare_json(self, json_str: str):
+        json_str = self._escape_newlines_in_json(json_str)
+        json_str = json_str.replace("False", "false").replace("True", "true")
+        return json_str
+    
     def _parse_input(
         self,
         tool_input: Union[str, Dict],
@@ -287,8 +308,7 @@ class ChildTool(BaseTool):
         input_args = self.args_schema
         if input_args is not None:
             if isinstance(tool_input, str):
-                tool_input = tool_input.replace("\n", "\\n")
-                tool_input = json.loads(tool_input)
+                tool_input = json.loads(self._prepare_json(tool_input))
 
             result = input_args.parse_obj(tool_input)
             return {
