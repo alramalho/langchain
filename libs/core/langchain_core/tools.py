@@ -413,6 +413,11 @@ class ChildTool(BaseTool):
                 if new_arg_supported
                 else self._run(*tool_args, **tool_kwargs)
             )
+        except json.decoder.JSONDecodeError as e:
+            if not self.handle_validation_error:
+                raise e
+            else:
+                return self.handle_validation_error(f"This json '{tool_input}' could not be parsed due to error '{e}'")
         except ValidationError as e:
             if not self.handle_validation_error:
                 raise e
