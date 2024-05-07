@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import inspect
 import json
+import re
 import uuid
 import warnings
 from abc import ABC, abstractmethod
@@ -280,7 +281,6 @@ class ChildTool(BaseTool):
     # --- Tool ---
 
     def _escape_newlines_in_json(self, json_str: str):
-        import re
         # Regex pattern to match string values and properly escape internal newlines
         pattern = r'(?<!\\)"((?:[^"\\]|\\.)*)"'
         
@@ -295,8 +295,16 @@ class ChildTool(BaseTool):
         escaped_json = re.sub(pattern, replace_newlines, json_str)
         return escaped_json
 
+    def _remove_backticks(self, json_str: str):
+        # Regular expression pattern to match single or triple backticks around the JSON
+        pattern = r'^`{1,3}(.+?)`{1,3}$'
+        # Use re.sub to replace the matched backticks with just the inner group (the actual JSON)
+        cleaned_json = re.sub(pattern, r'\1', json_str, flags=re.DOTALL)
+        return cleaned_json
+    
     def _prepare_json(self, json_str: str):
         json_str = self._escape_newlines_in_json(json_str)
+        json_str = self._remove_backticks(json_str)
         json_str = json_str.replace("False", "false").replace("True", "true")
         return json_str
     
